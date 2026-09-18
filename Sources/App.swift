@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 @main
 struct CollectionApp: App {
@@ -11,6 +12,38 @@ struct CollectionApp: App {
                 .environmentObject(collection)
         }
         .defaultSize(width: 1240, height: 800)
+        .commands {
+            CommandGroup(replacing: .importExport) {
+                Button("Import Collection…") { importCollection() }.keyboardShortcut("i", modifiers: [.command, .shift])
+                Button("Export Collection…") { exportCollection() }.keyboardShortcut("e", modifiers: [.command, .shift])
+            }
+        }
+    }
+
+    /// Merge a JSON export from the iPhone app (or another Mac) into this collection.
+    private func importCollection() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.message = "Choose a collection export (JSON)"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let n = try collection.merge(from: url)
+            let alert = NSAlert(); alert.messageText = "Imported"
+            alert.informativeText = "\(n) new \(Kind.current.noun)\(n == 1 ? "" : "s") added; existing entries updated."
+            alert.runModal()
+        } catch {
+            let alert = NSAlert(); alert.alertStyle = .warning
+            alert.messageText = "Couldn't import"; alert.informativeText = "That file isn't a \(Kind.current.appName) export."
+            alert.runModal()
+        }
+    }
+
+    private func exportCollection() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = Kind.current.appName.lowercased().replacingOccurrences(of: " ", with: "-") + ".json"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        try? collection.export(to: url)
     }
 }
 
@@ -170,7 +203,7 @@ struct ListView: View {
     var body: some View {
         List(items, selection: $selection) { i in
             HStack(spacing: 12) {
-                ArtView(title: i.wikiTitle).frame(width: 52, height: 52)
+                ArtView(title: i.wikiTitle, artURL: i.artURL).frame(width: 52, height: 52)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(i.title).fontWeight(.medium).lineLimit(1)
                     Text(subtitle(i)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -202,7 +235,7 @@ struct GridView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 190), spacing: 14)], spacing: 16) {
                 ForEach(items) { i in
                     VStack(alignment: .leading, spacing: 6) {
-                        ArtView(title: i.wikiTitle).aspectRatio(1, contentMode: .fit)
+                        ArtView(title: i.wikiTitle, artURL: i.artURL).aspectRatio(1, contentMode: .fit)
                         Text(i.title).font(.callout).fontWeight(.medium).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                         Text(i.artist.isEmpty ? i.category : i.artist).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
@@ -242,7 +275,7 @@ struct ItemDetail: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                ArtView(title: draft.wikiTitle, large: true).frame(maxWidth: .infinity).frame(height: 280)
+                ArtView(title: draft.wikiTitle, artURL: draft.artURL, large: true).frame(maxWidth: .infinity).frame(height: 280)
 
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Title", text: $draft.title).font(.title).fontWeight(.bold).textFieldStyle(.plain)
@@ -446,6 +479,7 @@ struct Tag: View {
 
 struct ArtView: View {
     let title: String?
+    var artURL: String? = nil
     var large = false
     @State private var image: NSImage?
     private let kind = Kind.current
@@ -462,8 +496,9 @@ struct ArtView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 6))
-        .task(id: title) {
+        .task(id: (artURL ?? "") + "|" + (title ?? "")) {
             image = nil
+            if let s = artURL, let url = URL(string: s) { image = await ArtStore.shared.load(url: url); return }
             guard let title = title else { return }
             image = await ArtStore.shared.load(title, large: large)
         }

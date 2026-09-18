@@ -6,6 +6,7 @@ struct Item: Identifiable, Codable, Hashable {
     var artist: String = ""         // artist (music) or director (movies)
     var category: String            // system or format
     var wikiTitle: String?          // Wikipedia article key for art and the blurb
+    var artURL: String?             // direct cover URL when the iPhone app found it by barcode
     var year: Int?
     var blurb: String?
     var condition: String = ""
@@ -48,6 +49,20 @@ final class Collection: ObservableObject {
     func add(_ item: Item) { items.append(item) }
     func remove(_ id: Item.ID) { items.removeAll { $0.id == id } }
     func update(_ item: Item) { if let i = items.firstIndex(where: { $0.id == item.id }) { items[i] = item } }
+
+    /// Merge a JSON export (from the iPhone app or another Mac): same id replaces, new ids append.
+    func merge(from url: URL) throws -> Int {
+        let incoming = try Self.decoder.decode([Item].self, from: Data(contentsOf: url))
+        var added = 0
+        for i in incoming {
+            if let idx = items.firstIndex(where: { $0.id == i.id }) { items[idx] = i } else { items.append(i); added += 1 }
+        }
+        return added
+    }
+
+    func export(to url: URL) throws {
+        try Self.encoder.encode(items).write(to: url, options: .atomic)
+    }
 
     private static let decoder: JSONDecoder = { let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601; return d }()
     private static let encoder: JSONEncoder = {

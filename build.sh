@@ -26,7 +26,7 @@ build() {  # name exec icon flags...
     local DEST="/Applications/$NAME.app"
     [[ -w /Applications ]] || DEST="$HOME/Applications/$NAME.app"
     rm -rf "$DEST"; cp -R "$OUT" "$DEST"; echo "installed $DEST"
-    [[ "${LAUNCH:-}" == "1" ]] && open "$DEST"
+    if [[ "${LAUNCH:-}" == "1" ]]; then open "$DEST"; fi
   fi
 }
 

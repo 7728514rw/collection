@@ -24,6 +24,22 @@ final class ArtStore: ObservableObject {
         }
     }
 
+    /// A direct image URL (barcode-sourced cover art), cached like the rest.
+    func load(url: URL) async -> NSImage? {
+        let key = "U|" + url.absoluteString
+        if let img = images[key] { return img }
+        if let t = inflight[key] { return await t.value }
+        let task = Task<NSImage?, Never> {
+            let img = await Self.fetchImage(url, cacheDir: dir, limiter: limiter)
+            if let img = img { images[key] = img }
+            return img
+        }
+        inflight[key] = task
+        let result = await task.value
+        inflight[key] = nil
+        return result
+    }
+
     func load(_ title: String, large: Bool) async -> NSImage? {
         let key = (large ? "L|" : "S|") + title
         if let img = images[key] { return img }
