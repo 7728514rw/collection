@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds "Game Collection.app" and "Music Collection.app" (same sources, -D MUSIC picks the second)
+# Builds "Game Collection.app", "Music Collection.app" and "Movie Collection.app" (same sources; -D MUSIC / -D MOVIES pick the flavour)
 # into ./build. Pass --install to also copy them to /Applications; --launch to open them too.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -36,3 +36,4 @@ for a in "$@"; do
 done
 build "Game Collection"  GameCollection  games
 build "Music Collection" MusicCollection music -D MUSIC
+build "Movie Collection" MovieCollection movies -D MOVIES

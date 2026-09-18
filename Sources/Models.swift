@@ -3,7 +3,7 @@ import Foundation
 struct Item: Identifiable, Codable, Hashable {
     var id = UUID()
     var title: String
-    var artist: String = ""         // music only
+    var artist: String = ""         // artist (music) or director (movies)
     var category: String            // system or format
     var wikiTitle: String?          // Wikipedia article key for art and the blurb
     var year: Int?

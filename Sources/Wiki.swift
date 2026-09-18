@@ -14,9 +14,9 @@ enum Wiki {
         /// Article title without a disambiguator: "Doom (2016 video game)" -> "Doom"
         var cleanTitle: String { title.replacingOccurrences(of: " \\([^)]*\\)$", with: "", options: .regularExpression) }
         var year: Int? { Self.year(in: description) }
-        /// "... album by Radiohead" -> "Radiohead"
+        /// "... album by Radiohead" -> "Radiohead"; "2010 film directed by Christopher Nolan" -> "Christopher Nolan"
         var artist: String? {
-            guard let r = description.range(of: " by ") else { return nil }
+            guard let r = description.range(of: " by ", options: .backwards) else { return nil }
             return String(description[r.upperBound...]).trimmingCharacters(in: .whitespaces)
         }
         static func year(in s: String) -> Int? {

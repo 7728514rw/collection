@@ -1,4 +1,4 @@
-// Renders the app icon (1024x1024 PNG). Usage: swift make-icon.swift games|music out.png
+// Renders the app icon (1024x1024 PNG). Usage: swift make-icon.swift games|music|movies out.png
 import AppKit
 
 let kind = CommandLine.arguments[1], out = CommandLine.arguments[2]
@@ -26,6 +26,45 @@ if kind == "music" {
     NSBezierPath(ovalIn: NSRect(x: c.x - 120, y: c.y - 120, width: 240, height: 240)).fill()
     NSColor(calibratedWhite: 0.10, alpha: 1).setFill()
     NSBezierPath(ovalIn: NSRect(x: c.x - 14, y: c.y - 14, width: 28, height: 28)).fill()
+} else if kind == "movies" {
+    // deep red ground, a DVD keep case with the disc slid out behind it
+    NSGradient(colors: [NSColor(calibratedRed: 0.80, green: 0.22, blue: 0.30, alpha: 1),
+                        NSColor(calibratedRed: 0.32, green: 0.06, blue: 0.16, alpha: 1)])!.draw(in: plate, angle: -70)
+    let shadow = NSShadow(); shadow.shadowBlurRadius = 30; shadow.shadowOffset = NSSize(width: 0, height: -12)
+    shadow.shadowColor = NSColor.black.withAlphaComponent(0.5)
+    let c = NSPoint(x: 620, y: 540)                         // the disc, peeking out to the right
+    NSGraphicsContext.saveGraphicsState(); shadow.set()
+    NSColor(calibratedWhite: 0.85, alpha: 1).setFill()
+    NSBezierPath(ovalIn: NSRect(x: c.x - 250, y: c.y - 250, width: 500, height: 500)).fill()
+    NSGraphicsContext.restoreGraphicsState()
+    let disc = NSBezierPath(ovalIn: NSRect(x: c.x - 250, y: c.y - 250, width: 500, height: 500))
+    NSGradient(colors: [NSColor(calibratedRed: 0.78, green: 0.86, blue: 0.95, alpha: 1),
+                        NSColor(calibratedRed: 0.96, green: 0.90, blue: 0.80, alpha: 1),
+                        NSColor(calibratedRed: 0.72, green: 0.80, blue: 0.92, alpha: 1)])!.draw(in: disc, angle: 35)
+    NSColor(calibratedWhite: 1, alpha: 0.35).setStroke()
+    for r in stride(from: 90, through: 230, by: 14) {
+        let p = NSBezierPath(ovalIn: NSRect(x: c.x - CGFloat(r), y: c.y - CGFloat(r), width: CGFloat(r * 2), height: CGFloat(r * 2)))
+        p.lineWidth = 2; p.stroke()
+    }
+    NSColor(calibratedWhite: 0.95, alpha: 1).setFill()
+    NSBezierPath(ovalIn: NSRect(x: c.x - 70, y: c.y - 70, width: 140, height: 140)).fill()
+    NSColor(calibratedRed: 0.32, green: 0.06, blue: 0.16, alpha: 1).setFill()
+    NSBezierPath(ovalIn: NSRect(x: c.x - 26, y: c.y - 26, width: 52, height: 52)).fill()
+    // the case in front
+    let caseRect = NSRect(x: 230, y: 200, width: 380, height: 560)
+    NSGraphicsContext.saveGraphicsState(); shadow.set()
+    NSColor(calibratedWhite: 0.11, alpha: 1).setFill()
+    NSBezierPath(roundedRect: caseRect, xRadius: 22, yRadius: 22).fill()
+    NSGraphicsContext.restoreGraphicsState()
+    NSColor(calibratedWhite: 0.20, alpha: 1).setFill()      // spine
+    NSBezierPath(roundedRect: NSRect(x: 230, y: 200, width: 46, height: 560), xRadius: 22, yRadius: 22).fill()
+    NSColor(calibratedWhite: 0.11, alpha: 1).setFill()
+    NSBezierPath(rect: NSRect(x: 254, y: 200, width: 30, height: 560)).fill()
+    NSColor(calibratedRed: 0.93, green: 0.78, blue: 0.40, alpha: 1).setFill()  // cover art block
+    NSBezierPath(roundedRect: NSRect(x: 310, y: 380, width: 260, height: 340), xRadius: 10, yRadius: 10).fill()
+    NSColor(calibratedWhite: 0.95, alpha: 0.9).setFill()    // title lines
+    NSBezierPath(roundedRect: NSRect(x: 310, y: 300, width: 200, height: 26), xRadius: 6, yRadius: 6).fill()
+    NSBezierPath(roundedRect: NSRect(x: 310, y: 258, width: 130, height: 18), xRadius: 5, yRadius: 5).fill()
 } else {
     // cool ground, a row of game cases on a shelf
     NSGradient(colors: [NSColor(calibratedRed: 0.20, green: 0.62, blue: 0.58, alpha: 1),

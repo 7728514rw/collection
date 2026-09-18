@@ -16,6 +16,7 @@ struct CollectionApp: App {
 
 enum SortOrder: String, CaseIterable, Identifiable {
     case title = "Title", added = "Recently added", year = "Year", category = "Category", artist = "Artist"
+    var label: String { self == .artist ? Kind.current.artistNoun : rawValue }
     var id: String { rawValue }
 
     static var available: [SortOrder] { Kind.current.hasArtist ? allCases : allCases.filter { $0 != .artist } }
@@ -81,7 +82,7 @@ struct ContentView: View {
                 }
                 Section(kind.categoryNoun + "s") {
                     ForEach(categories, id: \.0) { name, count in
-                        Label(name, systemImage: kind.hasArtist ? "opticaldisc" : "gamecontroller").badge(count).tag(name)
+                        Label(name, systemImage: kind.symbol).badge(count).tag(name)
                     }
                 }
             }
@@ -122,7 +123,7 @@ struct ContentView: View {
                     .pickerStyle(.segmented)
                     Menu {
                         Picker("Sort by", selection: $sort) {
-                            ForEach(SortOrder.available) { Text($0.rawValue).tag($0) }
+                            ForEach(SortOrder.available) { Text($0.label).tag($0) }
                         }
                     } label: { Label("Sort", systemImage: "arrow.up.arrow.down") }
                 }
@@ -132,7 +133,7 @@ struct ContentView: View {
                 ItemDetail(item: item, onRemove: { remove(item.id) })
                     .id(item.id)
             } else {
-                ContentUnavailableView("Pick a \(kind.noun)", systemImage: kind.hasArtist ? "opticaldisc" : "gamecontroller",
+                ContentUnavailableView("Pick a \(kind.noun)", systemImage: kind.symbol,
                                        description: Text("Details and notes show here."))
             }
         }
@@ -246,7 +247,7 @@ struct ItemDetail: View {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Title", text: $draft.title).font(.title).fontWeight(.bold).textFieldStyle(.plain)
                     if kind.hasArtist {
-                        TextField("Artist", text: $draft.artist).font(.title3).foregroundStyle(.secondary).textFieldStyle(.plain)
+                        TextField(kind.artistNoun, text: $draft.artist).font(.title3).foregroundStyle(.secondary).textFieldStyle(.plain)
                     }
                 }
 
@@ -334,7 +335,7 @@ struct AddSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Add a \(kind.noun)").font(.title2).fontWeight(.bold)
 
-            TextField("Search Wikipedia for \(kind.hasArtist ? "an album or artist" : "a game")", text: $query)
+            TextField("Search Wikipedia for \(kind.searchHint)", text: $query)
                 .textFieldStyle(.roundedBorder)
                 .font(.title3)
                 .onSubmit { if picked == nil, let first = hits.first { pickedKey = first.key; fill(first) } else if canAdd { add() } }
@@ -363,8 +364,8 @@ struct AddSheet: View {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
                 if kind.hasArtist {
                     GridRow {
-                        Text("Artist").gridColumnAlignment(.trailing)
-                        TextField("Artist", text: $artist).textFieldStyle(.roundedBorder)
+                        Text(kind.artistNoun).gridColumnAlignment(.trailing)
+                        TextField(kind.artistNoun, text: $artist).textFieldStyle(.roundedBorder)
                     }
                 }
                 GridRow {
@@ -455,7 +456,7 @@ struct ArtView: View {
             if let image = image {
                 Image(nsImage: image).resizable().scaledToFit().padding(large ? 0 : 1)
             } else {
-                Image(systemName: kind.hasArtist ? "opticaldisc" : "gamecontroller")
+                Image(systemName: kind.symbol)
                     .font(.system(size: large ? 40 : 16))
                     .foregroundStyle(.quaternary)
             }

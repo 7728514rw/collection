@@ -1,7 +1,7 @@
 import Foundation
 
-/// What this build collects. `build.sh` compiles the same sources twice: with `-D MUSIC` for
-/// Music Collection, without it for Game Collection.
+/// What this build collects. `build.sh` compiles the same sources three times: with `-D MUSIC` for
+/// Music Collection, `-D MOVIES` for Movie Collection, and with neither for Game Collection.
 struct Kind {
     let appName: String
     let noun: String            // "game" / "album"
@@ -9,6 +9,9 @@ struct Kind {
     let categories: [String]    // presets for the picker; anything else can be typed
     let searchSuffix: String    // appended to Wikipedia searches to steer results
     let hasArtist: Bool
+    let artistNoun: String      // "Artist" / "Director" (unused for games)
+    let searchHint: String      // "an album or artist"
+    let symbol: String          // SF Symbol for the sidebar and placeholders
     let conditions: [String]
     let seed: [Item]
 
@@ -16,8 +19,15 @@ struct Kind {
     static let current = Kind(
         appName: "Music Collection", noun: "album", categoryNoun: "Format",
         categories: ["CD", "Vinyl", "Cassette", "Digital", "Other"],
-        searchSuffix: "album", hasArtist: true,
+        searchSuffix: "album", hasArtist: true, artistNoun: "Artist", searchHint: "an album or artist", symbol: "opticaldisc",
         conditions: ["", "Sealed", "Mint", "Very good", "Good", "Worn"],
+        seed: [])
+    #elseif MOVIES
+    static let current = Kind(
+        appName: "Movie Collection", noun: "movie", categoryNoun: "Format",
+        categories: ["DVD", "Blu-ray", "4K UHD", "Box set", "Other"],
+        searchSuffix: "film", hasArtist: true, artistNoun: "Director", searchHint: "a film or TV series", symbol: "film.stack",
+        conditions: ["", "Sealed", "Mint", "Good", "Scratched", "Missing case"],
         seed: [])
     #else
     static let current = Kind(
@@ -27,7 +37,7 @@ struct Kind {
                      "Game Boy", "Game Boy Color", "Game Boy Advance", "DS", "3DS",
                      "Xbox", "Xbox 360", "Xbox One", "Xbox Series X/S",
                      "Master System", "Mega Drive", "Saturn", "Dreamcast", "PC", "Other"],
-        searchSuffix: "video game", hasArtist: false,
+        searchSuffix: "video game", hasArtist: false, artistNoun: "", searchHint: "a game", symbol: "gamecontroller",
         conditions: ["", "Sealed", "Complete in box", "Boxed, no manual", "Loose"],
         seed: [Item(title: "Persona 4", artist: "", category: "PlayStation 2", wikiTitle: "Persona 4", year: 2008,
                     blurb: "Persona 4, released outside Japan as Shin Megami Tensei: Persona 4, is a 2008 role-playing video game by Atlus.")])
